@@ -2,23 +2,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 import subprocess
 import time
+
+
 try:
     import pydicom
 except:
     subprocess.run(['pip', 'install',  'pydicom'])
     import pydicom
 
-PATH = "D:\\下載\\gLymph test-20200429T121458Z-001\\gLymph test\\S5010 T2\\"
 
-def tellme(s):
-    print(s)
-    plt.title(s, fontsize=16)
-    plt.draw()
+
+class ImageAnalyzer:
+    def __init__(self, path):
+        self.PATH = path
+        # "D:\\下載\\gLymph test-20200429T121458Z-001\\gLymph test\\S5010 T2\\"
+        
+    def tellme(s):
+        print(s)
+        plt.title(s, fontsize=16)
+        plt.draw()
+    
+        
+    def select_region(self, args):
+        # usage：select_region
 
 ##################################################
 # Define a triangle by clicking three points
 
-img = pydicom.read_file(PATH+'I70').pixel_array
+    self.img = pydicom.read_file(PATH+'I70').pixel_array
 plt.clf()
 plt.imshow(img, cmap=plt.cm.bone)
 plt.gcf().canvas.draw() 
