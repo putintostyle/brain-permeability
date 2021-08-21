@@ -3,21 +3,19 @@ import numpy as np
 from matplotlib.widgets  import RectangleSelector
 from matplotlib.patches import Circle
 from matplotlib.artist import Artist
-xdata = np.linspace(0,9*np.pi, num=301)
-ydata = np.sin(xdata)
+# xdata = np.linspace(0,9*np.pi, num=301)
+# ydata = np.sin(xdata)
 
-fig, ax = plt.subplots()
-ax.plot(xdata, ydata)
+# fig, ax = plt.subplots()
+# ax.plot(xdata, ydata)
 
 
 
-def tellme(s):
-    print(s)
-    plt.title(s, fontsize = 16)
-    plt.draw() 
+
 # tellme('left click to started\n  double click to confirm')
 
 class window_motion:
+
     def  __init__(self, fig, ax):
         self.fig = fig
         self.ax = ax
@@ -27,7 +25,10 @@ class window_motion:
         self.ax.add_patch(self.circ)
         self.left = None
         self.right = None
-
+    def tellme(self, s):
+        print(s)
+        plt.title(s, fontsize = 16)
+        plt.draw() 
     def onclick(self, event):
         self.pressed = True
         self.double = event.dblclick
@@ -56,7 +57,7 @@ class window_motion:
         elif self.double:
             self.region.pop()
             plt.close()
-            print(self.region)
+            # print(self.region)
         
         
     def onrelease(self, event):
@@ -68,7 +69,7 @@ class window_motion:
 
             self.drawcirc(event)
             self.ax.add_patch(self.circ)
-            tellme('region center in {:.2f}, {:.2f}, radius {:.2f}\n double click to confrim'.format(self.center[0], self.center[1], self.radius))
+            self.tellme('region center in {:.2f}, {:.2f}, radius {:.2f}\n double click to confrim'.format(self.center[0], self.center[1], self.radius))
             self.plot()
                 
 
@@ -108,8 +109,8 @@ class window_motion:
         
         self.fig.canvas.draw()
         
-plt.axis('equal')
-wm = window_motion(fig, ax)
-wm.connect()
+# plt.axis('equal')
+# wm = window_motion(fig, ax)
+# wm.connect()
 
-plt.show()    
+# plt.show()    
