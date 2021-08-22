@@ -18,22 +18,27 @@ class ImageAnalyzerShellBase(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
 
-class ImageAnalyzerShell(ImageAnalyzerShellBase, ImageAnalyzer):
-    def __init__(self):
+class ImageAnalyzerShell(ImageAnalyzerShellBase):
+    def __init__(self, workDir):
         ImageAnalyzerShellBase.__init__(self)
-        self.analyzer = ImageAnalyzer
-        
-        
+        self.preprocessor = ImagePreprocessor(workDir)
+        self.region = {}
+          
     def do_select(self, args):
-        # dict = {'LF':{'slice_name': 'I70', 'region':[center, radius]}, 'CH':'LF':{'slice_name': 'I70', 'region':[center, radius]}}
+        # usage select 70 LF
+        # dict = {'LF':{'slice_name': 'I70', 'region':[center, radius]}, 'CH':{'slice_name': 'I70', 'region':[center, radius]}}
         cmds = args.split()
         slice = cmds[0]
         label = cmds[1]
-        tmp_dict = {'slice name' : slice, 'regions':self.analyzer.select_region(slice)}
+        tmp_dict = {'slice name' : slice, 'regions':self.preprocessor.select_region(slice)}
         
-        self.analyzer.region[label] = tmp_dict
+        self.region[label] = tmp_dict
          # 新增region上去
     def do_regionshow(self, args): 
-        # cmds = args.split()
+        
+        pass
+    def do_concerntration(self, args):
+        # usage concerntration label start end
+        cmds = args.split()
+        self.init_Ct = ImageAnalyzer()
 
-        self.analyzer.regionshow(slice)
