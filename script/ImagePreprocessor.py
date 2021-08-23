@@ -13,14 +13,13 @@ except:
             
 
 class ImagePreprocessor:
-    def __init__(self):
-        self.path = None
-        self.FileName = None
+    def __init__(self, workDir):
+        self.path = workDir
         # "D:\\下載\\gLymph test-20200429T121458Z-001\\gLymph test\\S5010 T2\\"
     
-    def select_region(self, selectFileName):
+    def select_region(self, slice):
         fig, ax = plt.subplots()
-        img = pydicom.read_file(os.path.join(self.path, self.FileName))
+        img = pydicom.read_file(os.path.join(self.path, slice))
         ax.imshow(img, cmap = plt.cm.bone)
         wm = window_motion(fig, ax)
         wm.connect()
@@ -28,8 +27,8 @@ class ImagePreprocessor:
         return wm.region
         # usage：select_region
        
-    def image_calibration(self, locations):
-        img = pydicom.read_file(os.path.join(self.path, self.FileName))
+    def image_calibration(self, fileName, locations):
+        img = pydicom.read_file(os.path.join(self.path, fileName))
         peaks1, _ = find_peaks(img[locations[0]], height=0)
         peaks2, _ = find_peaks(img[locations[1]], height=0)
         peaks3, _ = find_peaks(img[locations[2]], height=0)
