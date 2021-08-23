@@ -13,10 +13,8 @@ except:
             
 
 class ImagePreprocessor:
-    def __init__(self, workDir):
-        
-        self.path = workDir
-        
+    def __init__(self):
+        self.path = None
         # "D:\\下載\\gLymph test-20200429T121458Z-001\\gLymph test\\S5010 T2\\"
     
     def select_region(self, selectFileName):

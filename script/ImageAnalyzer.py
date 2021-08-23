@@ -1,16 +1,18 @@
 from ImagePreprocessor import *
 
+class ImageAnalyzer:
+    def __init__(self, workDir):
+        self.fileName = None
+        self.initROI = None
+        self.dict = None
+        self.path = workDir
+        self.img = None
+        self.label = None
+    def imageCal(self, locations):
+        image_arr = pydicom.read_file(os.path.join(self.path, self.fileName)).pixel_array
+        return 
 
-class ImageBase:
-    def __init__(self, workDir, selectFileName, fileDict):
-        self.selectFileName = selectFileName
-        self.fileDict = fileDict
-        self.workDir = workDir
-        # fileDict = {'LF':{slice: 70,region:[]}}
-        pass
-    
-        
-    def storeROI(self,label):
+    def storeROI(self, label):
         ROI = []
         for selectROI in self.fileDict[label]['regions']:
             for i in range(0,144):
@@ -21,11 +23,15 @@ class ImageBase:
                             ROI.append(np.mean(tmp)+1e-10)
                         else:
                             ROI.append(self.img[i][j])
-    
-class ImageAnalyzer(ImageBase):
-    def __init__(self, workDir, selctFileName, locations):
-        super().__init__()
-        self.img = ImagePreprocessor(self.workDir, self.selectFileName).image_calibration(locations)
-        pass
+        return ROI
+
+    def initialROI(self):
+        if self.fileName == None:
+            print('add a file name')
+        else:
+            self.initROI = self.storeROI(self.label)
+
     def computeConcerntration(self, initROI):
-        
+        if self.fileName == None:
+            print('add a file name')
+        else:

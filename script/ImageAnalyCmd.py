@@ -1,6 +1,6 @@
 import cmd
 from ImageAnalyzer import *
-
+from ImageSetting import *
 ''' 
 workflow:
 if rename:
@@ -21,7 +21,11 @@ class ImageAnalyzerShellBase(cmd.Cmd):
 class ImageAnalyzerShell(ImageAnalyzerShellBase):
     def __init__(self, workDir):
         ImageAnalyzerShellBase.__init__(self)
-        self.preprocessor = ImagePreprocessor(workDir)
+        
+        self.preprocessor = ImagePreprocessor()
+        self.preprocessor.path = workDir
+        self.analyzer = ImageAnalyzer()
+        self.analyzer.path = workDir
         self.region = {}
           
     def do_select(self, args):
@@ -38,7 +42,8 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         
         pass
     def do_concerntration(self, args):
-        # usage concerntration label start end
+        # usage concerntration -label LR -start 70 -end 140
         cmds = args.split()
-        self.init_Ct = ImageAnalyzer()
+        self.analyzer.dict = self.region
+        self.analyzer.fileName =
 
