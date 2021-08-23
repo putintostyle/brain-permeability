@@ -22,10 +22,8 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
     def __init__(self, workDir):
         ImageAnalyzerShellBase.__init__(self)
         
-        self.preprocessor = ImagePreprocessor()
-        self.preprocessor.path = workDir
-        self.analyzer = ImageAnalyzer()
-        self.analyzer.path = workDir
+        self.preprocessor = ImagePreprocessor(workDir)
+        self.analyzer = ImageAnalyzer(workDir, self.preprocessor)
         self.region = {}
           
     def do_select(self, args):
@@ -45,5 +43,9 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         # usage concerntration -label LR -start 70 -end 140
         cmds = args.split()
         self.analyzer.dict = self.region
+
+        self.Ct = []
+        
+        self.initROI = self.analyzer.initROI()
         self.analyzer.fileName =
 
