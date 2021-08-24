@@ -43,9 +43,12 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         # usage concerntration -label LR -start 70 -end 140
         cmds = args.split()
         self.analyzer.dict = self.region
-
-        self.Ct = []
+        self.initROI = self.analyzer.storeRegion(ROI_slice)
+        self.initVIF = self.analyzer.storeRegion(VIF_slice)
+        self.c_t = self.analyzer.computeConcerntration(self.initROI, start, end)
+        self.c_p = self.analyzer.computeConcerntration(self.initVIF, start, end)
         
-        self.initROI = self.analyzer.initROI()
-        self.analyzer.fileName =
+
+        
+        
 

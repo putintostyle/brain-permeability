@@ -14,7 +14,7 @@ class ImageAnalyzer:
     def imageCal(self, slice):
         self.img = self.preprocessor.image_calibration(slice, self.locations)
 
-    def storeROI(self, label, slice):
+    def storeRegion(self, label, slice):
         self.imageCal(slice) # cal image
         ROI = []
         for selectROI in self.fileDict[label]['regions']:
@@ -28,33 +28,25 @@ class ImageAnalyzer:
                             ROI.append(self.img[i][j])
         return np.array(ROI)
 
-    def initialROI(self, slice):
+    def initialRegion(self, slice):
         if self.fileName == None:
             print('add a file name')
         else:
-            self.init_ROI = self.storeROI(self.label, slice = "") # here to provide label and slice
+            return self.storeRegion(self.label, slice = "") # here to provide label and slice
 
-    def computeConcerntration(self, start_slice, end_slice):
-        if self.init_ROI == None:
-            self.initialROI()
-        else:
-            self.c_t = []
-            for sliceNum in range(start_slice, end_slice):
-                ROI_t = self.storeROI(self.label, sliceNum)
-                c_t_tmp = np.zeros(len(ROI_t))
-                for i in range(len(c_t_tmp)):
-                    if (ROI_t[i] == 0) & (self.init_ROI[i] == 0):
-                        c_t_tmp[i] = 0
-                    else:
-                        
-                        c_t_tmp[i] = -np.log(ROI_t[i]/self.init_ROI[i])
-        #                 if c_t_tmp[i] >= 3:
-                            
-        #                     print("ROI = ", ROI[i])
-        #                     print("ROI_t = ", ROI_t[i])
-        #                     print('===================')
-        #                     print(c_t_tmp[i])
-        #                     print('===================')
-        #         print('****************************************************')            
-                self.c_t.append(c_t_tmp)
-            self.c_t = np.array(self.c_t)
+    def computeConcerntration(self, VIF = False, ROI_size, initial, start_slice, end_slice):
+        c = []
+        for sliceNum in range(start_slice, end_slice):
+            ROI_t = self.storeROI(self.label, sliceNum)
+            c_t = np.zeros(len(ROI_t))
+            for i in range(len(c_t)):
+                if (ROI_t[i] == 0) & (initial[i] == 0):
+                        c_t[i] = 0
+                else:
+                    c_t[i] = -np.log(ROI_t[i]/initial[i])
+                if VIF:
+                    c.append([np.mean(c_t) for i in range(ROI_size)])
+                else:
+                    c.append(c_t)
+
+        c = np.array(self.c_t)
