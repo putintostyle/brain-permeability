@@ -39,15 +39,28 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
     def do_regionshow(self, args): 
         
         pass
-    def do_concerntration(self, args):
+    def do_computation(self, args):
         # usage concerntration -label LR -start 70 -end 140
         cmds = args.split()
+        # ToDo : convert input to variables
         self.analyzer.dict = self.region
         self.initROI = self.analyzer.storeRegion(ROI_slice)
         self.initVIF = self.analyzer.storeRegion(VIF_slice)
-        self.c_t = self.analyzer.computeConcerntration(self.initROI, start, end)
-        self.c_p = self.analyzer.computeConcerntration(self.initVIF, start, end)
-        
+        self.c_t = self.analyzer.computeConcerntration(self.initROI, 
+                                                       start_ROI,
+                                                       end_ROI)
+
+        self.c_p = self.analyzer.computeConcerntration(self.initVIF,
+                                                       VIF = True,
+                                                       ROI_size = len(self.ROI),
+                                                       start_VIF,
+                                                       end_VIF)
+        self.y = (self.c_t+1e-10)/(self.c_p+1e-10)
+
+        self.Ki = self.analyzer.computeKi(len(self.initROI,
+                                          self.c_p,
+                                          self.y)
+
 
         
         

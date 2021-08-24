@@ -1,7 +1,8 @@
 from ImagePreprocessor import *
+from sklearn import linear_model
 
 class ImageAnalyzer:
-    def __init__(self, workDir, locations = 'default', preprocessor):
+    def __init__(self, workDir, preprocessor, locations = 'default'):
         self.fileName = None
         self.init_ROI = None
         self.dict = None
@@ -34,7 +35,7 @@ class ImageAnalyzer:
         else:
             return self.storeRegion(self.label, slice = "") # here to provide label and slice
 
-    def computeConcerntration(self, VIF = False, ROI_size, initial, start_slice, end_slice):
+    def computeConcerntration(self, VIF = False, ROI_size = None, initial, start_slice, end_slice):
         c = []
         for sliceNum in range(start_slice, end_slice):
             ROI_t = self.storeROI(self.label, sliceNum)
@@ -44,9 +45,57 @@ class ImageAnalyzer:
                         c_t[i] = 0
                 else:
                     c_t[i] = -np.log(ROI_t[i]/initial[i])
-                if VIF:
-                    c.append([np.mean(c_t) for i in range(ROI_size)])
-                else:
-                    c.append(c_t)
+            if VIF:
+                c.append([np.mean(c_t) for i in range(ROI_size)])
+            else:
+                c.append(c_t)
 
-        c = np.array(self.c_t)
+        return np.array(c)
+    
+    def computeKi(self, shape_ROI, c_p, y, drop_list = []):
+        Ki = []
+        for i in range(shape_ROI):
+            c_p_tmp = c_p[:,i]+1e-10
+            per_time = 0
+            y_t = []
+            x_t = []
+            for time in range(len(c_p_tmp)):
+                if time not in drop_list: 
+                    if time <= 16: 
+                        per_time += c_p_tmp[time]*(4/60)
+                        y_t.append(y[:,i][time])
+                        x_t.append(per_time/(c_p_tmp[time]))
+                    elif (time>16)&(time<=35):
+                        per_time += c_p_tmp[time]*(6/60)
+                        y_t.append(y[:,i][time])
+                        x_t.append(per_time/(c_p_tmp[time]))
+                    elif (time>35)&(time<=41):
+                        per_time += c_p_tmp[time]*(8/60)
+                        y_t.append(y[:,i][time])
+                        x_t.append(per_time/(c_p_tmp[time]))
+                    elif (time>41):
+                        per_time += c_p_tmp[time]
+                        y_t.append(y[:,i][time])
+                        x_t.append(per_time/(c_p_tmp[time]))
+            x_t = np.array(x_t)
+            y_t = np.array(y_t)
+
+            y_t_mean = np.mean(y_t)
+            y_t_std = np.std(y_t)
+
+            drop_index = []
+            for index in range(len(y_t)):
+                if abs(y_t[index]-y_t_mean)>y_t_std:
+                    drop_index.append(index)
+
+            y_t = np.delete(y_t, drop_index)
+            x_t = np.delete(x_t, drop_index)
+    #         plt.scatter(x_t, y_t)
+    #         plt.show()
+            regr = linear_model.LinearRegression()
+    #         print(x_t)
+    #         print(y_t)
+            regr.fit(x_t.reshape(-1,1), y_t)
+            Ki.append(round(regr.coef_[0],5))
+        return np.array(Ki)
+    
