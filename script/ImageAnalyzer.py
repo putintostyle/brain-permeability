@@ -3,22 +3,21 @@ from ImagePreprocessor import *
 class ImageAnalyzer:
     def __init__(self, workDir, locations = 'default', preprocessor):
         self.fileName = None
-        self.initROI = None
+        self.init_ROI = None
         self.dict = None
         self.path = workDir
         self.img = None
         self.label = None
         self.locations = locations
         self.preprocessor = preprocessor
-        self.initROI = None
 
-    def imageCal(self):
-        self.img = self.preprocessor.image_calibration(self.fileName, self.locations)
-    def storeROI(self, slice):
-        if self.img == None:
-            self.imageCal()
+    def imageCal(self, slice):
+        self.img = self.preprocessor.image_calibration(slice, self.locations)
+
+    def storeROI(self, label, slice):
+        self.imageCal(slice) # cal image
         ROI = []
-        for selectROI in self.fileDict[self.label]['regions']:
+        for selectROI in self.fileDict[label]['regions']:
             for i in range(0,144):
                 for j in range(0,144):
                     if (i-selectROI[0])**2+(j-selectROI[1])**2<=selectROI[2]**2:
@@ -27,13 +26,35 @@ class ImageAnalyzer:
                             ROI.append(np.mean(tmp)+1e-10)
                         else:
                             ROI.append(self.img[i][j])
-        return ROI
+        return np.array(ROI)
 
-    def initialROI(self):
+    def initialROI(self, slice):
         if self.fileName == None:
             print('add a file name')
         else:
-            return self.storeROI(self.label)
+            self.init_ROI = self.storeROI(self.label, slice = "") # here to provide label and slice
 
-    def computeConcerntration(self):
-        self.initialROI()
+    def computeConcerntration(self, start_slice, end_slice):
+        if self.init_ROI == None:
+            self.initialROI()
+        else:
+            self.c_t = []
+            for sliceNum in range(start_slice, end_slice):
+                ROI_t = self.storeROI(self.label, sliceNum)
+                c_t_tmp = np.zeros(len(ROI_t))
+                for i in range(len(c_t_tmp)):
+                    if (ROI_t[i] == 0) & (self.init_ROI[i] == 0):
+                        c_t_tmp[i] = 0
+                    else:
+                        
+                        c_t_tmp[i] = -np.log(ROI_t[i]/self.init_ROI[i])
+        #                 if c_t_tmp[i] >= 3:
+                            
+        #                     print("ROI = ", ROI[i])
+        #                     print("ROI_t = ", ROI_t[i])
+        #                     print('===================')
+        #                     print(c_t_tmp[i])
+        #                     print('===================')
+        #         print('****************************************************')            
+                self.c_t.append(c_t_tmp)
+            self.c_t = np.array(self.c_t)
