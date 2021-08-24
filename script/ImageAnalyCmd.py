@@ -57,9 +57,12 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
                                                        end_VIF)
         self.y = (self.c_t+1e-10)/(self.c_p+1e-10)
 
-        self.Ki = self.analyzer.computeKi(len(self.initROI,
+        self.Ki = self.analyzer.computeKi(len(self.initROI),
                                           self.c_p,
                                           self.y)
+        self.removeNoise, self.bins, self.positive, self.negative = self.analyzer.noiseElimation(self.Ki)
+        
+        
 
 
         

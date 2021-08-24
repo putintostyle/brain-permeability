@@ -99,3 +99,17 @@ class ImageAnalyzer:
             Ki.append(round(regr.coef_[0],5))
         return np.array(Ki)
     
+    def noiseElimation(Ki, bin_num = 200):
+        plot1 = np.histogram(Ki[Ki>=0], bins=bin_num , range = (0, np.max(np.abs(Ki))))
+        plot2 = np.histogram(-1*Ki[Ki<0], bins = plot1[1])
+        
+        bar1 = plot1[0]
+        bar2 = plot2[0]
+        
+        substr_bar = np.zeros(len(bar1))
+        for i in range(len(bar1)):
+            if (bar1[i]-bar2[i]) < 0:
+                substr_bar[i] = 0
+            else:
+                substr_bar[i] = bar1[i]-bar2[i]
+        return substr_bar/len(Ki), plot1[1], bar1/len(Ki), bar2/len(Ki)
