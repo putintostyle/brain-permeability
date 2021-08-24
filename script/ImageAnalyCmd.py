@@ -43,6 +43,7 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         # usage concerntration -label LR -start 70 -end 140
         cmds = args.split()
         # ToDo : convert input to variables
+        self.Ki = []
         self.analyzer.dict = self.region
         self.initROI = self.analyzer.storeRegion(ROI_slice)
         self.initVIF = self.analyzer.storeRegion(VIF_slice)
@@ -57,9 +58,9 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
                                                        end_VIF)
         self.y = (self.c_t+1e-10)/(self.c_p+1e-10)
 
-        self.Ki = self.analyzer.computeKi(len(self.initROI),
+        self.Ki.append(self.analyzer.computeKi(len(self.initROI),
                                           self.c_p,
-                                          self.y)
+                                          self.y))
         self.removeNoise, self.bins, self.positive, self.negative = self.analyzer.noiseElimation(self.Ki)
         
         

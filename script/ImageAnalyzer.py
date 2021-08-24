@@ -113,3 +113,4 @@ class ImageAnalyzer:
             else:
                 substr_bar[i] = bar1[i]-bar2[i]
         return substr_bar/len(Ki), plot1[1], bar1/len(Ki), bar2/len(Ki)
+    
