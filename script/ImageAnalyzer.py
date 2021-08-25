@@ -1,6 +1,6 @@
 from ImagePreprocessor import *
 from sklearn import linear_model
-
+import random
 class ImageAnalyzer:
     def __init__(self, workDir, preprocessor, locations = 'default'):
         self.fileName = None
@@ -15,18 +15,24 @@ class ImageAnalyzer:
     def imageCal(self, slice):
         self.img = self.preprocessor.image_calibration(slice, self.locations)
 
-    def storeRegion(self, label, slice):
+    def storeRegion(self, label, slice, purturbNum =):
         self.imageCal(slice) # cal image
         ROI = []
+        
         for selectROI in self.fileDict[label]['regions']:
-            for i in range(0,144):
-                for j in range(0,144):
-                    if (i-selectROI[0])**2+(j-selectROI[1])**2<=selectROI[2]**2:
-                        if self.img[i][j] == 0:
-                            tmp = self.img[i-3:i+2,j-3:j+2]
-                            ROI.append(np.mean(tmp)+1e-10)
-                        else:
-                            ROI.append(self.img[i][j])
+            centerList, radius = [[selectROI[0], selectROI[1]]], selectROI[2]
+            if purturbNum != 0:
+                for pur in range(purturbNum):
+                    center += [[center[0][0]+random.randint(-1, 1), center[0][0]+random.randint(-1, 1)]]
+            for center in centerList:
+                for i in range(0,144):
+                    for j in range(0,144):
+                        if (i-center[0])**2+(j-center[1])**2<=radius**2:
+                            if self.img[i][j] == 0:
+                                tmp = self.img[i-3:i+2,j-3:j+2]
+                                ROI.append(np.mean(tmp)+1e-10)
+                            else:
+                                ROI.append(self.img[i][j])
         return np.array(ROI)
 
     def initialRegion(self, slice):
@@ -35,8 +41,10 @@ class ImageAnalyzer:
         else:
             return self.storeRegion(self.label, slice = "") # here to provide label and slice
 
-    def computeConcerntration(self, VIF = False, ROI_size = None, initial, start_slice, end_slice):
+    def computeConcerntration(self, VIF = False, ROI_size = None, initial, start_slice, end_slice, purturbation = True):
         c = []
+        
+
         for sliceNum in range(start_slice, end_slice):
             ROI_t = self.storeROI(self.label, sliceNum)
             c_t = np.zeros(len(ROI_t))
@@ -113,4 +121,3 @@ class ImageAnalyzer:
             else:
                 substr_bar[i] = bar1[i]-bar2[i]
         return substr_bar/len(Ki), plot1[1], bar1/len(Ki), bar2/len(Ki)
-    
