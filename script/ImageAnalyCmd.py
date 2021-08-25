@@ -49,13 +49,15 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         self.initVIF = self.analyzer.storeRegion(VIF_slice)
         self.c_t = self.analyzer.computeConcerntration(self.initROI, 
                                                        start_ROI,
-                                                       end_ROI)
+                                                       end_ROI
+                                                       )
 
         self.c_p = self.analyzer.computeConcerntration(self.initVIF,
                                                        VIF = True,
                                                        ROI_size = len(self.ROI),
                                                        start_VIF,
-                                                       end_VIF)
+                                                       end_VIF
+                                                       )
         self.y = (self.c_t+1e-10)/(self.c_p+1e-10)
 
         self.Ki.append(self.analyzer.computeKi(len(self.initROI),
