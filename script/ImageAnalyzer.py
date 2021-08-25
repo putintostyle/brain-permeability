@@ -16,7 +16,7 @@ class ImageAnalyzer:
     def imageCal(self, slice):
         self.img = self.preprocessor.image_calibration(slice, self.locations)
 
-    def storeRegion(self, label, slice, purt):
+    def storeRegion(self, label, slice, purturb):
         self.imageCal(slice) # cal image
 
         ROI = []
@@ -24,12 +24,16 @@ class ImageAnalyzer:
         for selectROI in self.dict[label]['regions']:
             for i in range(0,144):
                 for j in range(0,144):
-                    if (i-(selectROI[0]+purt[0]))**2+(j-(selectROI[1]+purt[1]))**2<=selectROI[2]**2:
+                    with_purt = (purturb == None)&((i-(selectROI[0]))**2+(j-(selectROI[1]))**2<=selectROI[2]**2)
+                    without_purt = (purturb != None)&((i-(selectROI[0]+purturb[0]))**2+(j-(selectROI[1]+purturb[1]))**2<=selectROI[2]**2)
+                    if with_purt|without_purt:
                         if self.img[i][j] == 0:
                             tmp = self.img[i-3:i+2,j-3:j+2]
                             ROI.append(np.mean(tmp)+1e-10)
                         else:
                             ROI.append(self.img[i][j])
+                    
+                        
         return np.array(ROI)
 
     def initialRegion(self, slice):
@@ -38,26 +42,24 @@ class ImageAnalyzer:
         else:
             return self.storeRegion(self.label, slice = "") # here to provide label and slice
 
-    def computeConcerntration(self, VIF = False, ROI_size = None, initial, start_slice, end_slice, purturbNum = 0):
+    def computeConcerntration(self, VIF = False, ROI_size = None, initial, start_slice, end_slice, purturb = None):
         c = []
         
-        purtList = [[0,0]]
+    
         for sliceNum in range(start_slice, end_slice):
-            purtList += [ [random.randint(-1, 1), random.randint(-1, 1)] for i in range(purturbNum)]
             
-            for purt in purtList: 
-                
-                ROI_t = self.storeROI(self.label, sliceNum, purt)
-                c_t = np.zeros(len(ROI_t))
-                for i in range(len(c_t)):
-                    if (ROI_t[i] == 0) & (initial[i] == 0):
-                            c_t[i] = 0
-                    else:
-                        c_t[i] = -np.log(ROI_t[i]/initial[i])
-                if VIF:
-                    c.append([np.mean(c_t) for i in range(ROI_size)])
+            
+            ROI_t = self.storeROI(self.label, sliceNum, purturb)
+            c_t = np.zeros(len(ROI_t))
+            for i in range(len(c_t)):
+                if (ROI_t[i] == 0) & (initial[i] == 0):
+                        c_t[i] = 0
                 else:
-                    c.append(c_t)
+                    c_t[i] = -np.log(ROI_t[i]/initial[i])
+            if VIF:
+                c.append([np.mean(c_t) for i in range(ROI_size)])
+            else:
+                c.append(c_t)
 
         return np.array(c)
     
