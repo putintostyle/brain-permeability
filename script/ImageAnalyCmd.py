@@ -40,36 +40,51 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         
         pass
     def do_computation(self, args):
-        # usage concerntration -label LR -start 70 -end 140
+        # usage concerntration -all 64 -LR 64
         cmds = args.split()
+
+        if '-all' in cmds:
+            series = cmds(cmds.index[-all]+1)
+        else:
+            print('need parameters, for example, -all 64')
         # ToDo : convert input to variables
         self.Ki = []
         self.analyzer.dict = self.region
-        self.initROI = self.analyzer.storeRegion(ROI_slice)
-        self.initVIF = self.analyzer.storeRegion(VIF_slice)
-        self.c_p = self.analyzer.computeConcerntration(self.initVIF,
-                                                        VIF = True,
-                                                        ROI_size = len(self.ROI),
-                                                        start_VIF,
-                                                        end_VIF,
-                                                        )
-        purturbList = [[random.randint(-1, 1), random.randint(-1, 1)] for i in range(3)]
-        
-        for purturb in purturbList:
-            self.c_t = self.analyzer.computeConcerntration(self.initROI, 
-                                                        start_ROI,
-                                                        end_ROI,
-                                                        purturb)
 
+        for label in self.analyzer.dict:
+            self.analyzer.label = label
             
-            self.y = (self.c_t+1e-10)/(self.c_p+1e-10)
+            start_ROI = self.region[label]['slice name']
+            start_VIF = self.region['VIF']['slice name']
 
-            self.Ki.append(self.analyzer.computeKi(len(self.initROI),
-                                            self.c_p,
-                                            self.y))
-        self.removeNoise, self.bins, self.positive, self.negative = self.analyzer.noiseElimation(self.Ki)
-        
-        
+            self.initROI = self.analyzer.storeRegion(label, start_ROI)
+            self.initVIF = self.analyzer.storeRegion(start_VIF)
+
+            self.c_p = self.analyzer.computeConcerntration(True,
+                                                            len(self.initROI),
+                                                            self.initVIF,
+                                                            start_VIF,
+                                                            start_VIF+series,
+                                                            )
+            purturbList = [[random.randint(-1, 1), random.randint(-1, 1)] for i in range(3)]
+
+            for purturb in purturbList:
+                self.c_t = self.analyzer.computeConcerntration(self.initROI, 
+                                                            start_ROI,
+                                                            start_ROI+series,
+                                                            purturb)
+
+                
+                self.y = (self.c_t+1e-10)/(self.c_p+1e-10)
+
+                self.Ki.append(self.analyzer.computeKi(len(self.initROI),
+                                                self.c_p,
+                                                self.y))
+            
+            self.removeNoise, self.bins, self.positive, self.negative = self.analyzer.noiseElimation(self.Ki)
+    
+    def do_stat(self, args):
+        cmds = args.split()
 
 
         

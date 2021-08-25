@@ -16,7 +16,7 @@ class ImageAnalyzer:
     def imageCal(self, slice):
         self.img = self.preprocessor.image_calibration(slice, self.locations)
 
-    def storeRegion(self, label, slice, purturb):
+    def storeRegion(self, label, slice, purturb=None):
         self.imageCal(slice) # cal image
 
         ROI = []
@@ -26,7 +26,7 @@ class ImageAnalyzer:
                 for j in range(0,144):
                     with_purt = (purturb == None)&((i-(selectROI[0]))**2+(j-(selectROI[1]))**2<=selectROI[2]**2)
                     without_purt = (purturb != None)&((i-(selectROI[0]+purturb[0]))**2+(j-(selectROI[1]+purturb[1]))**2<=selectROI[2]**2)
-                    if with_purt|without_purt:
+                    if (with_purt|without_purt):
                         if self.img[i][j] == 0:
                             tmp = self.img[i-3:i+2,j-3:j+2]
                             ROI.append(np.mean(tmp)+1e-10)
@@ -101,11 +101,9 @@ class ImageAnalyzer:
 
             y_t = np.delete(y_t, drop_index)
             x_t = np.delete(x_t, drop_index)
-    #         plt.scatter(x_t, y_t)
-    #         plt.show()
+    
             regr = linear_model.LinearRegression()
-    #         print(x_t)
-    #         print(y_t)
+    
             regr.fit(x_t.reshape(-1,1), y_t)
             Ki.append(round(regr.coef_[0],5))
         return np.array(Ki)
