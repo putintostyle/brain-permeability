@@ -12,7 +12,7 @@ class ImageAnalyzer:
         self.label = None
         self.locations = locations
         self.preprocessor = preprocessor
-
+        self.result_mean = []
     def imageCal(self, slice):
         self.img = self.preprocessor.image_calibration(slice, self.locations)
 
@@ -108,9 +108,11 @@ class ImageAnalyzer:
             Ki.append(round(regr.coef_[0],5))
         return np.array(Ki)
     
-    def noiseElimation(Ki, bin_num = 200):
+    def noiseElimation(self, Ki, bin_num = 200):
         plot1 = np.histogram(Ki[Ki>=0], bins=bin_num , range = (0, np.max(np.abs(Ki))))
         plot2 = np.histogram(-1*Ki[Ki<0], bins = plot1[1])
+        
+        self.bins = plot1[1]
         
         bar1 = plot1[0]
         bar2 = plot2[0]
@@ -121,4 +123,33 @@ class ImageAnalyzer:
                 substr_bar[i] = 0
             else:
                 substr_bar[i] = bar1[i]-bar2[i]
-        return substr_bar/len(Ki), plot1[1], bar1/len(Ki), bar2/len(Ki)
+        
+        self.removeNoise, self.bins, self.positive, self.negative = substr_bar/len(Ki), plot1[1], bar1/len(Ki), bar2/len(Ki)
+        
+    def plotStat(self, label, target = 'eliminate', save = False):
+        ''' TO DO: path writable '''
+        if (target == 'eliminate') | (target == 'all'):
+            plt.clf()
+            plt.bar(self.bins,np.mean(self.removeNoise, axis=0),width = 0.002,color = 'grey')
+            plt.xlim(-max(self.bins), max(self.bins))
+            plt.ylim(0, 0.08)
+            plt.suptitle('Total amount of '+label+' = '+str(np.sum(self.bins*np.mean(self.removeNoise, axis=0))))
+            plt.xlabel('Ki (1/min)')
+            plt.ylabel('fraction of voxels')
+            if save:
+                plt.savefig(PATH+'AIF_full_seq\\' +label+' after subtraction.png')
+            plt.show()
+        elif (target == 'origin')|(target == 'all'):
+            plt.clf()
+            plt.bar(-1*self.bins,np.mean(self.negative, axis=0),width = 0.002,color = 'r')
+            plt.bar(self.bins,np.mean(self.positive, axis=0),width = 0.002,color = 'b')
+            plt.xlim(-max(self.bins), max(self.bins))
+            plt.ylim(0, 0.08)
+            plt.suptitle('Total amount of '+label+' = '+str(np.sum(self.bins*np.mean(self.removeNoise, axis=0))))
+            plt.xlabel('Ki (1/min)')
+            plt.ylabel('fraction of voxels')
+            if save:
+                plt.savefig(PATH+'AIF_full_seq\\' +label+' before subtraction.png')
+            plt.show()
+
+        self.result_mean.append([label, np.sum(self.bins*np.mean(self.removeNoise, axis=0))])
