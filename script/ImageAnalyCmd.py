@@ -25,7 +25,7 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         self.preprocessor = ImagePreprocessor(workDir)
         self.analyzer = ImageAnalyzer(workDir, self.preprocessor)
         self.region = {}
-          
+        self.result = {} 
     def do_select(self, args):
         # usage select 70 LF
         # dict = {'LF':{'slice_name': 'I70', 'region':[center, radius]}, 'CH':{'slice_name': 'I70', 'region':[center, radius]}}
@@ -80,11 +80,16 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
                 self.Ki.append(self.analyzer.computeKi(len(self.initROI),
                                                 self.c_p,
                                                 self.y))
-            
-            self.removeNoise, self.bins, self.positive, self.negative = self.analyzer.noiseElimation(self.Ki)
+            removeNoise, bins, positive, negative = self.analyzer.noiseElimation(self.Ki)
+            result = {'remove':removeNoise, 'bins':bins, 'positive' :positive, 'negative' :negative}
+            self.result[label] = result
     
     def do_stat(self, args):
+        # usage stat 
         cmds = args.split()
+        if '-all' in cmds:
+            for label in self.analyzer.dict:
+                self.analyzer.plotStat(self.result, label, )
 
 
         
