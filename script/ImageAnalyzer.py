@@ -12,7 +12,7 @@ class ImageAnalyzer:
         self.label = None
         self.locations = locations
         self.preprocessor = preprocessor
-        self.result_mean = []
+        self.result_mean = {}
 
     def imageCal(self, slice):
         self.img = self.preprocessor.image_calibration(slice, self.locations)
@@ -150,5 +150,5 @@ class ImageAnalyzer:
             if save:
                 plt.savefig(PATH+'AIF_full_seq\\' +label+' before subtraction.png')
             plt.show()
-
-        self.result_mean.append([label, np.sum(result[label]['bins']*np.mean(result[label]['removeNoise'], axis=0))])
+        
+        self.result_mean[label] = {'Ki' : np.sum(result[label]['bins']*np.mean(result[label]['removeNoise'], axis=0))}
