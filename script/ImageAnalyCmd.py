@@ -131,32 +131,34 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         cmds = args.split()
 
         if '-all' in cmds:
-            series = cmds(cmds.index[-all]+1)
+            series = cmds[cmds.index['-all']+1]
         else:
             print('need parameters, for example, -all 64')
-        # ToDo : convert input to variables
+        # ToDo : Specify region
         self.Ki = []
         self.analyzer.dict = self.region
 
         for label in self.analyzer.dict:
             self.analyzer.label = label
-            
+            ### store initial slice
             start_ROI = self.region[label]['slice name']
             start_VIF = self.region['VIF']['slice name']
-
+            ### store initial data
             self.initROI = self.analyzer.storeRegion(label, start_ROI)
             self.initVIF = self.analyzer.storeRegion(start_VIF)
 
-            self.c_p = self.analyzer.computeConcerntration(True,
-                                                            len(self.initROI),
+            self.c_p = self.analyzer.computeConcerntration(label,
                                                             self.initVIF,
                                                             start_VIF,
                                                             start_VIF+series,
+                                                            VIF = False,
+                                                            ROI_size = len(self.initROI),
                                                             )
             purturbList = [[random.randint(-1, 1), random.randint(-1, 1)] for i in range(3)]
 
             for purturb in purturbList:
-                self.c_t = self.analyzer.computeConcerntration(self.initROI, 
+                self.c_t = self.analyzer.computeConcerntration(label,
+                                                            self.initROI, 
                                                             start_ROI,
                                                             start_ROI+series,
                                                             purturb)
