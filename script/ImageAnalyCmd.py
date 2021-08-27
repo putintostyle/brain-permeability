@@ -174,12 +174,17 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
             self.result[label] = result
     
     def do_stat(self, args):
-        # usage stat 
+        # usage stat -all [-original] [-removenoise]
         cmds = args.split()
         if '-all' in cmds:
-            for label in self.analyzer.dict:
-                self.analyzer.plotStat(self.result, label, )
-
+            if '-original' in cmds:
+                for label in self.analyzer.dict:
+                    self.analyzer.plotStat(self.result, label, target='original')
+            elif '-removenoise' in cmds:
+                for label in self.analyzer.dict:
+                    self.analyzer.plotStat(self.result, label, target='eliminate')
+        else:
+            print('not yet finished')
 
         
         
