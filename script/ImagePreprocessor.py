@@ -17,11 +17,11 @@ class ImagePreprocessor:
         self.path = workDir
         # "D:\\下載\\gLymph test-20200429T121458Z-001\\gLymph test\\S5010 T2\\"
     
-    def select_region(self, slice, radius = None):
+    def select_region(self, slice, manRadius = False):
         fig, ax = plt.subplots()
-        img = pydicom.read_file(os.path.join(self.path, slice))
+        img = pydicom.read_file(os.path.join(self.path, slice)).pixel_array
         ax.imshow(img, cmap = plt.cm.bone)
-        wm = window_motion(fig, ax, radius)
+        wm = window_motion(fig, ax, manRadius)
         wm.connect()
         plt.show()
         return wm.region
@@ -41,9 +41,9 @@ class ImagePreprocessor:
         return img/np.mean(fat_array)
 ##################################################
 # Define a triangle by clicking three points
-imga = ImageAnalyzer(workDir = '../S5010 T2', selectFileName = 'I70')
-imga.imgSetting()
-print(imga.img)
+# imga = ImageAnalyzer(workDir = '../S5010 T2', selectFileName = 'I70')
+# imga.imgSetting()
+# print(imga.img)
 # imga.region = {'LR':{'slice name' : 70, 'regions':imga.select_region()}}
 # imga.show()
 '''

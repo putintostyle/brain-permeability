@@ -1,6 +1,6 @@
 import cmd
 from ImageAnalyzer import *
-from ImageSetting import *
+
 ''' 
 workflow:
 if rename:
@@ -110,7 +110,22 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
             print('please specify three cuts, for example , fatCut 70 80 90')
         else:
             self.fatCut.append([int(i) for i in cmds])
-        
+    def do_print(self, args):
+        cmds = args.split()
+        if 'fat' in cmds:
+            print(self.fatCut)
+        if 'region' in cmds:
+            print(self.region)
+        if 'result' in cmds:
+            print(self.result)
+    def do_clean(self, args):
+        cmds = args.split()
+        if 'fat' in cmds:
+            self.fatCut = []
+        if 'region' in cmds:
+            self.region = {}
+        if 'result' in cmds:
+            self.result = {}
     def do_select(self, args):
         # usage select 70 LF --manual-radius
         # dict = {'LF':{'slice_name': 'I70', 'region':[center, radius]}, 'CH':{'slice_name': 'I70', 'region':[center, radius]}}
