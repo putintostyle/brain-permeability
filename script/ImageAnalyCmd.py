@@ -100,9 +100,17 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         ImageAnalyzerShellBase.__init__(self)
         
         self.preprocessor = ImagePreprocessor(workDir)
-        self.analyzer = ImageAnalyzer(workDir, self.preprocessor)
+        self.fatCut = []
+        self.analyzer = ImageAnalyzer(workDir, self.preprocessor, self.fatCut)
         self.region = {}
-        self.result = {} 
+        self.result = {}
+    def do_fat(self, args):
+        cmds = args.split()
+        if len(cmds) != 3:
+            print('please specify three cuts, for example , fatCut 70 80 90')
+        else:
+            self.fatCut.append([int(i) for i in cmds])
+        
     def do_select(self, args):
         # usage select 70 LF --manual-radius
         # dict = {'LF':{'slice_name': 'I70', 'region':[center, radius]}, 'CH':{'slice_name': 'I70', 'region':[center, radius]}}
@@ -110,9 +118,9 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         slice = cmds[0]
         label = cmds[1]
         if '--manual-radius' in cmds:
-            tmp_dict = {'slice name' : slice, 'regions':self.preprocessor.select_region(slice)}
+            tmp_dict = {'slice name' : slice, 'regions':self.preprocessor.select_region(slice,  manRadius=True)}
         else:
-            tmp_dict = {'slice name' : slice, 'regions':self.preprocessor.select_region(slice, radius = 5)}
+            tmp_dict = {'slice name' : slice, 'regions':self.preprocessor.select_region(slice)}
         self.region[label] = tmp_dict
          # 新增region上去
     def do_regionshow(self, args): 

@@ -3,23 +3,32 @@ from ImagePreprocessor import *
 from sklearn import linear_model
 
 class ImageAnalyzer:
-    def __init__(self, workDir, preprocessor, locations = 'default'):
+    def __init__(self, workDir, preprocessor, fatCut):
         self.fileName = None
         self.init_ROI = None
         self.dict = None
         self.path = workDir
         self.img = None
         self.label = None
-        self.locations = locations
+        if fatCut == []:
+            self.fatCut = [[70,85,90],
+                            [75,80,90],
+                            [74,87,95],
+                            ]
+        else:
+            self.fatCut = fatCut
+
         self.preprocessor = preprocessor
         self.result_mean = {}
 
     def imageCal(self, slice):
-        self.img = self.preprocessor.image_calibration(slice, self.locations)
+        self.img = self.preprocessor.image_calibration(slice, self.fatCut)
 
-    def storeRegion(self, label, slice, purturb=None):
-        self.imageCal(slice) # cal image
-
+    def storeRegion(self, label, slice ,purturb=None):
+        if label == 'VIF':
+            self.imageCal(slice[0], self.fatCut) # cal image
+        else:
+            self.imageCal(slice, self.fatCut)
         ROI = []
         
         for selectROI in self.dict[label]['regions']:
@@ -35,20 +44,20 @@ class ImageAnalyzer:
                             ROI.append(self.img[i][j])              
         return np.array(ROI)
 
-    def initialRegion(self, slice):
+    def initialRegion(self, label):
         if self.fileName == None:
             print('add a file name')
         else:
-            return self.storeRegion(self.label, slice = "") # here to provide label and slice
+            return self.storeRegion(label, self.dict[label]['slice name']) # here to provide label and slice
 
-    def computeConcerntration(self, VIF = False, ROI_size = None, initial, start_slice, end_slice, purturb = None):
+    def computeConcerntration(self, label, initial, start_slice, end_slice, VIF = False, ROI_size = None, purturb = None):
         c = []
         
     
         for sliceNum in range(start_slice, end_slice):
             
             
-            ROI_t = self.storeROI(self.label, sliceNum, purturb)
+            ROI_t = self.storeROI(label, sliceNum, purturb)
             c_t = np.zeros(len(ROI_t))
             for i in range(len(c_t)):
                 if (ROI_t[i] == 0) & (initial[i] == 0):

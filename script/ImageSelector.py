@@ -16,7 +16,7 @@ from matplotlib.artist import Artist
 
 class window_motion:
 
-    def  __init__(self, fig, ax):
+    def  __init__(self, fig, ax, radius):
         self.fig = fig
         self.ax = ax
         self.pressed = None
@@ -25,6 +25,7 @@ class window_motion:
         self.ax.add_patch(self.circ)
         self.left = None
         self.right = None
+        self.radius = radius
     def tellme(self, s):
         print(s)
         plt.title(s, fontsize = 16)
@@ -48,8 +49,12 @@ class window_motion:
                 print('please select')
             else:
                 for cir in self.region:
-                    if ((self.xcoor-cir[0])**2+(self.ycoor-cir[1])**2)<(cir[2])**2:
-                        self.ax.add_patch(Circle((cir[0], cir[1]), 1/2*cir[2], fill=True, color='grey') )
+                    if self.radius == None:
+                        r = 5
+                    else:
+                        r = cir[2]
+                    if ((self.xcoor-cir[0])**2+(self.ycoor-cir[1])**2)<(r)**2:
+                        self.ax.add_patch(Circle((cir[0], cir[1]), 1/2*r, fill=True, color='grey') )
                         self.region.remove(cir)
                         self.fig.canvas.draw()
 
