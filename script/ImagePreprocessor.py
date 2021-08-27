@@ -17,21 +17,22 @@ class ImagePreprocessor:
         self.path = workDir
         # "D:\\下載\\gLymph test-20200429T121458Z-001\\gLymph test\\S5010 T2\\"
     
-    def select_region(self, slice):
+    def select_region(self, slice, radius = None):
         fig, ax = plt.subplots()
         img = pydicom.read_file(os.path.join(self.path, slice))
         ax.imshow(img, cmap = plt.cm.bone)
-        wm = window_motion(fig, ax)
+        wm = window_motion(fig, ax, radius)
         wm.connect()
         plt.show()
         return wm.region
         # usage：select_region
        
-    def image_calibration(self, fileName, locations):
+    def image_calibration(self, fileName, fatLocation):
         img = pydicom.read_file(os.path.join(self.path, fileName))
-        peaks1, _ = find_peaks(img[locations[0]], height=0)
-        peaks2, _ = find_peaks(img[locations[1]], height=0)
-        peaks3, _ = find_peaks(img[locations[2]], height=0)
+        peaks1, _ = find_peaks(img[fatLocation[0]], height=0)
+        peaks2, _ = find_peaks(img[fatLocation[1]], height=0)
+        peaks3, _ = find_peaks(img[fatLocation[2]], height=0)
+        
         fat_array = [peaks1[0],peaks1[-1], peaks2[0],peaks2[-1],peaks3[0],peaks3[-1]] #store all the peaks
         fat_array = [i for i in fat_array if i!=0]
         fat_array.remove(max(fat_array))

@@ -10,7 +10,8 @@ def parse_args():
 
 def main():
     parse = parse_args()
-    analyzer = ImageAnalyzer()
 
-    shell = ImageAnalyShell(parse.working_dir)
+    shell = ImageAnalyzerShell(parse.working_dir)
     shell.cmdloop()
+
+main()
