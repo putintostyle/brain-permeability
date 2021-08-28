@@ -16,7 +16,7 @@ from matplotlib.artist import Artist
 
 class window_motion:
 
-    def  __init__(self, fig, ax, radius):
+    def  __init__(self, fig, ax, manRadius = False):
         self.fig = fig
         self.ax = ax
         self.pressed = None
@@ -25,7 +25,7 @@ class window_motion:
         self.ax.add_patch(self.circ)
         self.left = None
         self.right = None
-        self.radius = radius
+        self.manRadius = manRadius
     def tellme(self, s):
         print(s)
         plt.title(s, fontsize = 16)
@@ -49,12 +49,8 @@ class window_motion:
                 print('please select')
             else:
                 for cir in self.region:
-                    if self.radius == None:
-                        r = 5
-                    else:
-                        r = cir[2]
-                    if ((self.xcoor-cir[0])**2+(self.ycoor-cir[1])**2)<(r)**2:
-                        self.ax.add_patch(Circle((cir[0], cir[1]), 1/2*r, fill=True, color='grey') )
+                    if ((self.xcoor-cir[0])**2+(self.ycoor-cir[1])**2) < cir[2]**2:
+                        self.ax.add_patch(Circle((cir[0], cir[1]), 1/2*cir[2], fill=True, color='grey') )
                         self.region.remove(cir)
                         self.fig.canvas.draw()
 
@@ -64,19 +60,25 @@ class window_motion:
             plt.close()
             # print(self.region)
         
-        
-    def onrelease(self, event):
-        
-        if (self.left):
+        elif self.left & (not self.manRadius):
             self.pressed = False
             
-            self.region.append(self.center+[self.radius])
-
+            
             self.drawcirc(event)
             self.ax.add_patch(self.circ)
             self.tellme('region center in {:.2f}, {:.2f}, radius {:.2f}\n double click to confrim'.format(self.center[0], self.center[1], self.radius))
             self.plot()
-                
+            self.region.append(self.center+[self.radius])
+
+    def onrelease(self, event):
+        
+        if (self.left) & self.manRadius:
+            self.pressed = False
+            self.drawcirc(event)
+            self.ax.add_patch(self.circ)
+            self.tellme('region center in {:.2f}, {:.2f}, radius {:.2f}\n double click to confrim'.format(self.center[0], self.center[1], self.radius))
+            self.plot()
+            self.region.append(self.center+[self.radius])
 
 
     def plot(self):
@@ -95,14 +97,22 @@ class window_motion:
                 self.drawcirc(event)
             
     def drawcirc(self, event):
-        self.tmp_x, self.tmp_y = event.xdata, event.ydata
-        x_vec = self.tmp_x - self.xcoor
-        y_vec = self.tmp_y - self.ycoor
-        self.center = [(self.tmp_x+self.xcoor)/2, (self.tmp_y+self.ycoor)/2]
-        self.radius = np.sqrt(x_vec**2+y_vec**2)
-        self.circ.set_center((self.center[0], self.center[1]))
-        self.circ.set_height(self.radius)
-        self.circ.set_width(self.radius)
+        if self.manRadius:
+            self.tmp_x, self.tmp_y = event.xdata, event.ydata
+            x_vec = self.tmp_x - self.xcoor
+            y_vec = self.tmp_y - self.ycoor
+            self.center = [(self.tmp_x+self.xcoor)/2, (self.tmp_y+self.ycoor)/2]
+            self.radius = np.sqrt(x_vec**2+y_vec**2)
+            self.circ.set_center((self.center[0], self.center[1]))
+            self.circ.set_height(self.radius)
+            self.circ.set_width(self.radius)
+        else:
+            self.tmp_x, self.tmp_y = event.xdata, event.ydata
+            self.center = [self.tmp_x, self.tmp_y]
+            self.circ.set_center((self.tmp_x, self.tmp_y))
+            self.radius = 5
+            self.circ.set_height(self.radius)
+            self.circ.set_width(self.radius)
         # self.ax.remove()
         # self.ax.plot([self.xcoor, event.xdata], [self.ycoor, self.ycoor])
         # self.ax.plot([self.xcoor, event.xdata], [event.ydata, event.ydata])

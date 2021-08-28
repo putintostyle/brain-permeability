@@ -1,6 +1,6 @@
 import cmd
 from ImageAnalyzer import *
-
+import shutil
 ''' 
 workflow:
 if rename:
@@ -17,7 +17,7 @@ result show
 class ImageAnalyzerShellBase(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
-        self.prompt = "> "
+        self.prompt = "usage > "
         self.intro  = None  ## defaults to None
 
     ## Command definitions ##
@@ -98,12 +98,32 @@ class ImageAnalyzerShellBase(cmd.Cmd):
 class ImageAnalyzerShell(ImageAnalyzerShellBase):
     def __init__(self, workDir):
         ImageAnalyzerShellBase.__init__(self)
-        
+        self.workDir = workDir
         self.preprocessor = ImagePreprocessor(workDir)
         self.fatCut = []
         self.analyzer = ImageAnalyzer(workDir, self.preprocessor, self.fatCut)
         self.region = {}
         self.result = {}
+    def do_rename(self, args):
+        # usage rename [folder]
+        # TODO: rename rules
+        cmds = args.split()
+        dataFolder = '__data__'
+        if not os.path.isdir(os.path.join(self.workDir, dataFolder)):
+            os.mkdir(os.path.join(self.workDir, dataFolder))
+        
+        for dirPath, dirNames, fileNames in os.walk(os.path.join(self.workDir)):
+#     print dirPath
+            for f in fileNames:
+                if f == 'I11':
+                    continue
+                old_file = os.path.join(dirPath, f)
+                dst = os.path.join(self.workDir, dataFolder)
+                new_file = os.path.join(dst, str(f)[1:-1])
+                if f[0] == 'I':
+                    shutil.copyfile(old_file, new_file)
+        self.preprocessor.path = os.path.join(self.workDir, dataFolder)
+        self.analyzer.path = os.path.join(self.workDir, dataFolder)
     def do_fat(self, args):
         cmds = args.split()
         if len(cmds) != 3:
@@ -120,11 +140,14 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
             print(self.result)
     def do_clean(self, args):
         cmds = args.split()
-        if 'fat' in cmds:
+        if '-f' in cmds:
             self.fatCut = []
-        if 'region' in cmds:
-            self.region = {}
-        if 'result' in cmds:
+        if '-reg' in cmds:
+            if cmds[cmds.index('-reg')+1] == 'all':
+                self.region = {}
+            else:
+                self.region.pop(cmds[cmds.index('-reg')+1])
+        if '-result' in cmds:
             self.result = {}
     def do_select(self, args):
         # usage select 70 LF --manual-radius
