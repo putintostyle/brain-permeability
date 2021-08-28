@@ -10,14 +10,7 @@ class ImageAnalyzer:
         self.path = workDir
         self.img = None
         self.label = None
-        if fatCut == []:
-            self.fatCut = [[70,85,90],
-                            [75,80,90],
-                            [74,87,95],
-                            ]
-        else:
-            self.fatCut = fatCut
-
+        
         self.preprocessor = preprocessor
         print(self.preprocessor.path)
         self.result_mean = {}
@@ -27,7 +20,7 @@ class ImageAnalyzer:
 
     def storeRegion(self, label, slice , fat_arr, purturb=None):
         if label == 'VIF':
-            self.imageCal(str(slice[0]), fat_arr) # cal image
+            self.imageCal(str(slice), fat_arr) # cal image
         else:
             self.imageCal(str(slice), fat_arr)
         ROI = []
@@ -35,8 +28,12 @@ class ImageAnalyzer:
         for selectROI in self.dict[label]['regions']:
             for i in range(0,144):
                 for j in range(0,144):
-                    with_purt = (purturb == None)&((i-(selectROI[0]))**2+(j-(selectROI[1]))**2<=selectROI[2]**2)
-                    without_purt = (purturb != None)&((i-(selectROI[0]+purturb[0]))**2+(j-(selectROI[1]+purturb[1]))**2<=selectROI[2]**2)
+                    if (purturb == None):
+                        with_purt  = ((i-(selectROI[0]))**2+(j-(selectROI[1]))**2<=selectROI[2]**2)
+                        without_purt = False
+                    else:
+                        with_purt = False
+                        without_purt = (purturb != None)&((i-(selectROI[0]+purturb[0]))**2+(j-(selectROI[1]+purturb[1]))**2<=selectROI[2]**2)
                     if (with_purt|without_purt):
                         if self.img[i][j] == 0:
                             tmp = self.img[i-3:i+2,j-3:j+2]
@@ -58,14 +55,16 @@ class ImageAnalyzer:
         for sliceNum in range(start_slice, end_slice):
             
             
-            ROI_t = self.storeROI(label, sliceNum, fat_arr, purturb)
+            ROI_t = self.storeRegion(label, sliceNum, fat_arr, purturb)
             c_t = np.zeros(len(ROI_t))
+            print(len(initial), len(ROI_t))
             for i in range(len(c_t)):
                 if (ROI_t[i] == 0) & (initial[i] == 0):
-                        c_t[i] = 0
+                    c_t[i] = 0
                 else:
                     c_t[i] = -np.log(ROI_t[i]/initial[i])
             if VIF:
+                print(ROI_size)
                 c.append([np.mean(c_t) for i in range(ROI_size)])
             else:
                 c.append(c_t)
@@ -118,6 +117,7 @@ class ImageAnalyzer:
         return np.array(Ki)
     
     def noiseElimation(self, Ki, bin_num = 200):
+        print(np.max(np.abs(Ki)))
         plot1 = np.histogram(Ki[Ki>=0], bins=bin_num , range = (0, np.max(np.abs(Ki))))
         plot2 = np.histogram(-1*Ki[Ki<0], bins = plot1[1])
         
@@ -133,16 +133,16 @@ class ImageAnalyzer:
             else:
                 substr_bar[i] = bar1[i]-bar2[i]
         
-        return substr_bar/len(Ki), plot1[1], bar1/len(Ki), bar2/len(Ki)
+        return substr_bar/len(Ki), plot1[1][0:-1], bar1/len(Ki), bar2/len(Ki)
         
     def plotStat(self, result, label, target = 'eliminate', save = False, PATH = None) :
         ''' TO DO: path writable '''
         if (target == 'eliminate') | (target == 'all'):
             plt.clf()
-            plt.bar(result[label]['bins'],np.mean(result[label]['remove'], axis=0),width = 0.002,color = 'grey')
+            plt.bar(result[label]['bins'],result[label]['remove'],width = 0.002,color = 'grey')
             plt.xlim(-max(result[label]['bins']), max(result[label]['bins']))
             plt.ylim(0, 0.08)
-            plt.suptitle('Total amount of '+label+' = '+str(np.sum(result[label]['bins']*np.mean(result[label]['remove'], axis=0))))
+            plt.suptitle('Total amount of '+label+' = '+str(np.sum(result[label]['bins']*result[label]['remove'])))
             plt.xlabel('Ki (1/min)')
             plt.ylabel('fraction of voxels')
             if save:
@@ -150,15 +150,15 @@ class ImageAnalyzer:
             plt.show()
         elif (target == 'original')|(target == 'all'):
             plt.clf()
-            plt.bar(-1*result[label]['bins'],np.mean(result[label]['negative'], axis=0),width = 0.002,color = 'r')
-            plt.bar(result[label]['bins'], np.mean(result[label]['positive'], axis=0),width = 0.002,color = 'b')
+            plt.bar(-1*result[label]['bins'],result[label]['negative'],width = 0.002,color = 'r')
+            plt.bar(result[label]['bins'], result[label]['positive'],width = 0.002,color = 'b')
             plt.xlim(-max(result[label]['bins']), max(result[label]['bins']))
             plt.ylim(0, 0.08)
-            plt.suptitle('Total amount of '+label+' = '+str(np.sum(result[label]['bins']*np.mean(result[label]['remove'], axis=0))))
+            plt.suptitle('Total amount of '+label+' = '+str(np.sum(result[label]['bins']*result[label]['remove'], )))
             plt.xlabel('Ki (1/min)')
             plt.ylabel('fraction of voxels')
             if save:
                 plt.savefig(PATH+'AIF_full_seq\\' +label+' before subtraction.png')
             plt.show()
         
-        self.result_mean[label] = {'Ki' : np.sum(result[label]['bins']*np.mean(result[label]['removeNoise'], axis=0))}
+        self.result_mean[label] = {'Ki' : np.sum(result[label]['bins']*result[label]['remove'])}

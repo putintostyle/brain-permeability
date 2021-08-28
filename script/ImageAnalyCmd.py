@@ -2,6 +2,7 @@ import cmd
 from ImageAnalyzer import *
 import shutil
 import pandas as pd
+import random
 ''' 
 workflow:
 if rename:
@@ -205,47 +206,62 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         else:
             print('need parameters, for example, -all 64')
         # ToDo : Specify region
-        self.Ki = []
+        
         self.analyzer.dict = self.region
-
+        if self.fatCut == []:
+            self.fatCut = [[70,85,90],
+                            [75,80,90],
+                            [74,87,95],
+                            ]
+        
         for label in self.analyzer.dict:
-            for fat_arr in  self.fatCut:
-                self.analyzer.label = label
-                ### store initial slice
-                start_ROI = self.region[label]['slice name']
-                start_VIF = self.region['VIF']['slice name']
-                ### store initial data
-                self.initROI = self.analyzer.storeRegion(label, start_ROI, fat_arr)
-                self.initVIF = self.analyzer.storeRegion(start_VIF, fat_arr)
-
-                self.c_p = self.analyzer.computeConcerntration(label,
-                                                                self.initVIF,
-                                                                start_VIF,
-                                                                start_VIF+series,
-                                                                fat_arr,
-                                                                VIF = False,
-                                                                ROI_size = len(self.initROI),
-                                                                )
-                purturbList = [[random.randint(-1, 1), random.randint(-1, 1)] for i in range(3)]
-                
-                for purturb in purturbList:
-                    self.c_t = self.analyzer.computeConcerntration(label,
-                                                                self.initROI, 
-                                                                start_ROI,
-                                                                start_ROI+series,
-                                                                fat_arr, 
-                                                                purturb)
-
+            if label != 'VIF':
+                self.removeNoise = []
+                self.positive = []
+                self.negative = []
+                for fat_arr in  self.fatCut:
+                    self.analyzer.label = label
+                    ### store initial slice
+                    start_ROI = self.region[label]['slice name']
+                    start_VIF = self.region['VIF']['slice name']
+                    ### store initial data
+                    # print(label, start_ROI, (fat_arr))
+                    self.initROI = self.analyzer.storeRegion(label, start_ROI, fat_arr)
+                    self.initVIF = self.analyzer.storeRegion('VIF',start_VIF, fat_arr)
                     
-                    self.y = (self.c_t+1e-10)/(self.c_p+1e-10)
+                    self.c_p = self.analyzer.computeConcerntration(label,
+                                                                    self.initVIF,
+                                                                    start_VIF,
+                                                                    int(start_VIF)+int(series),
+                                                                    fat_arr,
+                                                                    VIF = True,
+                                                                    ROI_size = len(self.initROI),
+                                                                    )
+                    purturbList = [[random.randint(-1, 1), random.randint(-1, 1)] for i in range(3)]
+                    
+                    for purturb in purturbList:
+                        self.c_t = self.analyzer.computeConcerntration(label,
+                                                                    self.initROI, 
+                                                                    start_ROI,
+                                                                    int(start_ROI)+int(series),
+                                                                    fat_arr, 
+                                                                    purturb = purturb)
 
-                    self.Ki.append(self.analyzer.computeKi(len(self.initROI),
-                                                    self.c_p,
-                                                    self.y))
-            removeNoise, bins, positive, negative = self.analyzer.noiseElimation(self.Ki)
-            result = {'remove':removeNoise, 'bins':bins, 'positive' :positive, 'negative' :negative}
-            self.result[label] = result
-    
+                        
+                        self.y = (self.c_t+1e-10)/(self.c_p+1e-10)
+
+                        Ki = self.analyzer.computeKi(len(self.initROI),
+                                                        self.c_p,
+                                                        self.y)
+                
+                        removeNoise, bins, positive, negative = self.analyzer.noiseElimation(np.array(Ki))
+                        self.bins = bins
+                        self.removeNoise.append(removeNoise)
+                        self.positive.append(positive)
+                        self.negative.append(negative)
+                tmp_dict = {'remove': np.mean(self.removeNoise, axis = 0), 'bins': self.bins, 'positive' :np.mean(self.positive, axis = 0), 'negative':np.mean(self.negative, axis = 0)}
+                self.result[label] = tmp_dict
+
     def do_stat(self, args):
         # usage stat -all [-original] [-removenoise]
         cmds = args.split()

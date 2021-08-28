@@ -29,7 +29,6 @@ class ImagePreprocessor:
        
     def image_calibration(self, fileName, fatLocation):
         img = pydicom.read_file(os.path.join(self.path, str(fileName))).pixel_array
-        print(fatLocation)
         peaks1, _ = find_peaks(img[fatLocation[0]], height=0)
         peaks2, _ = find_peaks(img[fatLocation[1]], height=0)
         peaks3, _ = find_peaks(img[fatLocation[2]], height=0)
