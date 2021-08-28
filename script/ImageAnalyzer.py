@@ -22,14 +22,14 @@ class ImageAnalyzer:
         print(self.preprocessor.path)
         self.result_mean = {}
 
-    def imageCal(self, slice):
-        self.img = self.preprocessor.image_calibration(slice, self.fatCut)
+    def imageCal(self, slice, fat_arr):
+        self.img = self.preprocessor.image_calibration(slice, fat_arr)
 
-    def storeRegion(self, label, slice ,purturb=None):
+    def storeRegion(self, label, slice , fat_arr, purturb=None):
         if label == 'VIF':
-            self.imageCal(slice[0], self.fatCut) # cal image
+            self.imageCal(str(slice[0]), fat_arr) # cal image
         else:
-            self.imageCal(slice, self.fatCut)
+            self.imageCal(str(slice), fat_arr)
         ROI = []
         
         for selectROI in self.dict[label]['regions']:
@@ -51,14 +51,14 @@ class ImageAnalyzer:
         else:
             return self.storeRegion(label, self.dict[label]['slice name']) # here to provide label and slice
 
-    def computeConcerntration(self, label, initial, start_slice, end_slice, VIF = False, ROI_size = None, purturb = None):
+    def computeConcerntration(self, label, initial, start_slice, end_slice, fat_arr, VIF = False, ROI_size = None, purturb = None):
         c = []
         
-    
+        
         for sliceNum in range(start_slice, end_slice):
             
             
-            ROI_t = self.storeROI(label, sliceNum, purturb)
+            ROI_t = self.storeROI(label, sliceNum, fat_arr, purturb)
             c_t = np.zeros(len(ROI_t))
             for i in range(len(c_t)):
                 if (ROI_t[i] == 0) & (initial[i] == 0):

@@ -1,6 +1,7 @@
 import cmd
 from ImageAnalyzer import *
 import shutil
+import pandas as pd
 ''' 
 workflow:
 if rename:
@@ -149,17 +150,48 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
                 self.region.pop(cmds[cmds.index('-reg')+1])
         if '-result' in cmds:
             self.result = {}
-    def do_select(self, args):
-        # usage select 70 LF --manual-radius
-        # dict = {'LF':{'slice_name': 'I70', 'region':[center, radius]}, 'CH':{'slice_name': 'I70', 'region':[center, radius]}}
+    def do_inputfile(self, args):
         cmds = args.split()
-        slice = cmds[0]
-        label = cmds[1]
-        if '--manual-radius' in cmds:
-            tmp_dict = {'slice name' : slice, 'regions':self.preprocessor.select_region(slice,  manRadius=True)}
+
+        file = np.array(pd.read_csv(cmds[0]).values)
+        
+        for data in file:
+            if data[1] != 'VIF':
+                tmp_dict = {'slice name' : data[0], 'regions':[[data[2], data[3], 5]]}
+
+                self.region[data[1]] = tmp_dict
+        self.region['VIF'] = {'regions':[]}
+        for data in file[file[:,1] == 'VIF']:
+            self.region['VIF']['slice name'] = data[0]
+            self.region['VIF']['regions'].append([data[2], data[3], 3])
+
+
+    def do_select(self, args):
+        # usage select 70 LF [--manual-radius] [--manual-input](center.x, center.y, radius)
+        # dict = {'LF':{'slice_name': 'I70', 'region':[center, radius]}, 'CH':{'slice_name': 'I70', 'region':[center, radius]}}
+        self.do_rename(args)
+        cmds = args.split()
+        if '-help' in cmds:
+            print('usage: select slice_num label [--manual-radius](default 5) [--manual-input](center.x, center.y, radius)\n')
+            print('for example: select 70 RF --manual-radius\n')
+            print('or: select 70 RF --manual-input 50 60 7')
         else:
-            tmp_dict = {'slice name' : slice, 'regions':self.preprocessor.select_region(slice)}
-        self.region[label] = tmp_dict
+            
+            if len(cmds) <= 2:
+                print('too less argument, for more information, please type <select -help>')
+                
+            else:
+                slice = cmds[0]
+                label = cmds[1]
+                
+                if '--manual-input' in cmds:
+                    input_idx = cmds.index('--manual-input')+1
+                    tmp_dict = {'slice name' : slice, 'regions':[[cmds[input_idx], cmds[input_idx+1], cmds[input_idx+2]]]} # center
+                elif '--manual-radius' in cmds:
+                    tmp_dict = {'slice name' : slice, 'regions':self.preprocessor.select_region(slice,  manRadius=True)}
+                else:
+                    tmp_dict = {'slice name' : slice, 'regions':self.preprocessor.select_region(slice)}
+                self.region[label] = tmp_dict
          # 新增region上去
     def do_regionshow(self, args): 
         
@@ -169,7 +201,7 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         cmds = args.split()
 
         if '-all' in cmds:
-            series = cmds[cmds.index['-all']+1]
+            series = cmds[cmds.index('-all')+1]
         else:
             print('need parameters, for example, -all 64')
         # ToDo : Specify region
@@ -177,36 +209,39 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         self.analyzer.dict = self.region
 
         for label in self.analyzer.dict:
-            self.analyzer.label = label
-            ### store initial slice
-            start_ROI = self.region[label]['slice name']
-            start_VIF = self.region['VIF']['slice name']
-            ### store initial data
-            self.initROI = self.analyzer.storeRegion(label, start_ROI)
-            self.initVIF = self.analyzer.storeRegion(start_VIF)
+            for fat_arr in  self.fatCut:
+                self.analyzer.label = label
+                ### store initial slice
+                start_ROI = self.region[label]['slice name']
+                start_VIF = self.region['VIF']['slice name']
+                ### store initial data
+                self.initROI = self.analyzer.storeRegion(label, start_ROI, fat_arr)
+                self.initVIF = self.analyzer.storeRegion(start_VIF, fat_arr)
 
-            self.c_p = self.analyzer.computeConcerntration(label,
-                                                            self.initVIF,
-                                                            start_VIF,
-                                                            start_VIF+series,
-                                                            VIF = False,
-                                                            ROI_size = len(self.initROI),
-                                                            )
-            purturbList = [[random.randint(-1, 1), random.randint(-1, 1)] for i in range(3)]
-
-            for purturb in purturbList:
-                self.c_t = self.analyzer.computeConcerntration(label,
-                                                            self.initROI, 
-                                                            start_ROI,
-                                                            start_ROI+series,
-                                                            purturb)
-
+                self.c_p = self.analyzer.computeConcerntration(label,
+                                                                self.initVIF,
+                                                                start_VIF,
+                                                                start_VIF+series,
+                                                                fat_arr,
+                                                                VIF = False,
+                                                                ROI_size = len(self.initROI),
+                                                                )
+                purturbList = [[random.randint(-1, 1), random.randint(-1, 1)] for i in range(3)]
                 
-                self.y = (self.c_t+1e-10)/(self.c_p+1e-10)
+                for purturb in purturbList:
+                    self.c_t = self.analyzer.computeConcerntration(label,
+                                                                self.initROI, 
+                                                                start_ROI,
+                                                                start_ROI+series,
+                                                                fat_arr, 
+                                                                purturb)
 
-                self.Ki.append(self.analyzer.computeKi(len(self.initROI),
-                                                self.c_p,
-                                                self.y))
+                    
+                    self.y = (self.c_t+1e-10)/(self.c_p+1e-10)
+
+                    self.Ki.append(self.analyzer.computeKi(len(self.initROI),
+                                                    self.c_p,
+                                                    self.y))
             removeNoise, bins, positive, negative = self.analyzer.noiseElimation(self.Ki)
             result = {'remove':removeNoise, 'bins':bins, 'positive' :positive, 'negative' :negative}
             self.result[label] = result
