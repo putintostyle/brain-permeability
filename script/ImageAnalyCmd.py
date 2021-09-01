@@ -156,7 +156,10 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         if 'region' in cmds:
             print(self.region)
         if 'result' in cmds:
-            print(self.result)
+            try:
+                print(self.analyzer.result_mean)
+            except:
+                print('please fo computation first')
     def do_clean(self, args):
         cmds = args.split()
         if '-f' in cmds:
