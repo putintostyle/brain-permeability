@@ -113,7 +113,8 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         self.analyzer = ImageAnalyzer(workDir, self.preprocessor, self.fatCut)
         self.region = {}
         self.result = {}
-    def man(self, args):
+        self.pid = None
+    def do_man(self, args):
         print('Please do rename first, this function will generate a new folder which contains all the copies of renamed file\n')
         print('fat : this function is to indicate the references of fats to calibrate image, please type fat 70 80 90')
         print('this means we take three cuts in a image for calibration. It is recommened that three set of cuts for calibration, that is, use fat function three times')
