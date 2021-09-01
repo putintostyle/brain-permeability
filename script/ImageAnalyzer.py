@@ -57,14 +57,14 @@ class ImageAnalyzer:
             
             ROI_t = self.storeRegion(label, sliceNum, fat_arr, purturb)
             c_t = np.zeros(len(ROI_t))
-            print(len(initial), len(ROI_t))
+            
             for i in range(len(c_t)):
                 if (ROI_t[i] == 0) & (initial[i] == 0):
                     c_t[i] = 0
                 else:
                     c_t[i] = -np.log(ROI_t[i]/initial[i])
             if VIF:
-                print(ROI_size)
+                
                 c.append([np.mean(c_t) for i in range(ROI_size)])
             else:
                 c.append(c_t)
@@ -117,7 +117,7 @@ class ImageAnalyzer:
         return np.array(Ki)
     
     def noiseElimation(self, Ki, bin_num = 200):
-        print(np.max(np.abs(Ki)))
+        
         plot1 = np.histogram(Ki[Ki>=0], bins=bin_num , range = (0, np.max(np.abs(Ki))))
         plot2 = np.histogram(-1*Ki[Ki<0], bins = plot1[1])
         

@@ -1,21 +1,7 @@
-class test:
-    def __init__ (self, tmp):
-        self.age = None
-        self.input = None
-    def next(a, b):
-        print(a+b)
-class add:
-    def __init__ (self):
-        pass
+import pandas as pd
+dict = {}
 
-    def a_year (self):
-        self.add = 3
-        print(self.input+self.add)
+dict['column'] = {'row 1':3}
+dict['column2'] = {'row 1':2}
 
-class main(test):
-    def __init__ (self):
-        super().__init__()
-        self.age = 10
-        self.input = 10
-        self.next()
-test.next(10, 5)
+pd.DataFrame.from_dict(data=dict, orient='index').to_csv('dict_file.csv', header=True)

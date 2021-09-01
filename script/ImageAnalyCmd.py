@@ -3,6 +3,13 @@ from ImageAnalyzer import *
 import shutil
 import pandas as pd
 import random
+import logging
+try:
+    from tqdm import tqdm
+except:
+    subprocess.run(['pip', 'install',  'tdqm'])
+    from tqdm import tqdm
+import time
 ''' 
 workflow:
 if rename:
@@ -20,7 +27,7 @@ class ImageAnalyzerShellBase(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
         self.prompt = "usage > "
-        self.intro  = None  ## defaults to None
+        self.intro  = "Type: rename to initial the program \n  If you have references to ROI please make sure the file is .csv file \n please type man for more information "  ## defaults to None
 
     ## Command definitions ##
     def do_hist(self, args):
@@ -106,6 +113,15 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
         self.analyzer = ImageAnalyzer(workDir, self.preprocessor, self.fatCut)
         self.region = {}
         self.result = {}
+    def man(self, args):
+        print('Please do rename first, this function will generate a new folder which contains all the copies of renamed file\n')
+        print('fat : this function is to indicate the references of fats to calibrate image, please type fat 70 80 90')
+        print('this means we take three cuts in a image for calibration. It is recommened that three set of cuts for calibration, that is, use fat function three times')
+        print('inputfile : If you have other files to indicate ROI please type inputfile filename')
+        print('select : select region interactively. usage:select')
+    def do_pid(self, args):
+        cmds = args.split()
+        self.pid = cmds
     def do_rename(self, args):
         # usage rename [folder]
         # TODO: rename rules
@@ -129,7 +145,7 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
     def do_fat(self, args):
         cmds = args.split()
         if len(cmds) != 3:
-            print('please specify three cuts, for example , fatCut 70 80 90')
+            print('please specify three cuts, for example , fat 70 80 90')
         else:
             self.fatCut.append([int(i) for i in cmds])
     def do_print(self, args):
@@ -215,6 +231,8 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
                             ]
         
         for label in self.analyzer.dict:
+            
+            
             if label != 'VIF':
                 self.removeNoise = []
                 self.positive = []
@@ -259,22 +277,31 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
                         self.removeNoise.append(removeNoise)
                         self.positive.append(positive)
                         self.negative.append(negative)
+                        
                 tmp_dict = {'remove': np.mean(self.removeNoise, axis = 0), 'bins': self.bins, 'positive' :np.mean(self.positive, axis = 0), 'negative':np.mean(self.negative, axis = 0)}
                 self.result[label] = tmp_dict
-
+        print('done, to read computational result please type:stat -all')
+        # pd.DataFrame.from_dict(data=self.result, orient='index').to_csv('result_file.csv', header=True)
     def do_stat(self, args):
         # usage stat -all [-original] [-removenoise]
         cmds = args.split()
-        if '-all' in cmds:
-            if '-original' in cmds:
-                for label in self.analyzer.dict:
-                    self.analyzer.plotStat(self.result, label, target='original')
-            elif '-removenoise' in cmds:
-                for label in self.analyzer.dict:
-                    self.analyzer.plotStat(self.result, label, target='eliminate')
+        if self.pid != None:
+            
+            if '-all' in cmds:
+                if '-removenoise' in cmds:
+                    for label in self.analyzer.dict:
+                        if label != 'VIF':
+                            self.analyzer.plotStat(self.result, label, target='eliminate')
+                else:
+                    for label in self.analyzer.dict:
+                        if label != 'VIF':
+                            self.analyzer.plotStat(self.result, label, target='original')
+                
+                pd.DataFrame.from_dict(data=self.analyzer.result_mean, orient='index').to_csv(self.pid+'_result_file.csv', header=True)
+            else:
+                print('not yet finished')
         else:
-            print('not yet finished')
-
+            print('please enter the pid with using pid [pid]')
         
         
 
