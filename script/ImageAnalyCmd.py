@@ -298,7 +298,7 @@ class ImageAnalyzerShell(ImageAnalyzerShellBase):
                         if label != 'VIF':
                             self.analyzer.plotStat(self.result, label, target='original')
                 
-                pd.DataFrame.from_dict(data=self.analyzer.result_mean, orient='index').to_csv(self.pid+'_result_file.csv', header=True)
+                pd.DataFrame.from_dict(data=self.analyzer.result_mean, orient='index').to_csv(str(self.pid)+'_result_file.csv', header=True)
             else:
                 print('not yet finished')
         else:
